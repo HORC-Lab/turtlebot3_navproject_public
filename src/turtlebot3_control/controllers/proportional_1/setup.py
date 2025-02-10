@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'turtlebot3_navcontrol'
+package_name = 'proportional_1'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'turtlebot3_navcontrol = turtlebot3_navcontrol.turtlebot3_navcontrol:main',
+            'proportional_1 = proportional_1.proportional_1:main',
         ],
     },
 )
