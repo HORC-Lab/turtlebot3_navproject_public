@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'proportional_1'
+package_name = 'feedforward_proportional'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'proportional_1 = proportional_1.proportional_1:main',
+            'feedforward_proportional = feedforward_proportional.feedforward_proportional:main',
         ],
     },
 )
