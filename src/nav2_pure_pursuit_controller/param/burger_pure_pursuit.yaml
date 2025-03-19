@@ -100,9 +100,9 @@ bt_navigator_rclcpp_node:
 
 controller_server:
   ros__parameters:
-    controller_plugins: ["FollowPath"]
+    controller_plugins: ["PurePursuit"]
 
-    FollowPath:
+    PurePursuit:
       plugin: "nav2_pure_pursuit_controller::PurePursuitController"
       debug_trajectory_details: True
       desired_linear_vel: 0.2
