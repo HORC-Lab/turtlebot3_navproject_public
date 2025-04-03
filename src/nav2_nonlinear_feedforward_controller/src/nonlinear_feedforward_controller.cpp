@@ -1,5 +1,6 @@
 #include "nav2_nonlinear_feedforward_controller/nonlinear_feedforward_controller.hpp"
 #include "pluginlib/class_list_macros.hpp"
+#include "nav2_core/exceptions.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -66,72 +67,92 @@ double NonlinearFeedforwardController::euclideanDistance(
   return std::hypot(a.position.x - b.position.x, a.position.y - b.position.y);
 }
 
+bool NonlinearFeedforwardController::transformPose(
+  const std::string & target_frame,
+  const geometry_msgs::msg::PoseStamped & in_pose,
+  geometry_msgs::msg::PoseStamped & out_pose,
+  const rclcpp::Duration & /*transform_tolerance*/)
+{
+  if (in_pose.header.frame_id == target_frame) {
+    out_pose = in_pose;
+    return true;
+  }
+
+  try {
+    tf_->transform(in_pose, out_pose, target_frame);
+    return true;
+  } catch (tf2::TransformException & ex) {
+    RCLCPP_ERROR(logger_, "Transform error: %s", ex.what());
+    return false;
+  }
+}
+
 geometry_msgs::msg::TwistStamped NonlinearFeedforwardController::computeVelocityCommands(
   const geometry_msgs::msg::PoseStamped & pose,
   const geometry_msgs::msg::Twist & /*velocity*/,
   nav2_core::GoalChecker * /*goal_checker*/)
 {
-  const auto & x = pose.pose.position.x;
-  const auto & y = pose.pose.position.y;
-  const auto & phi = tf2::getYaw(pose.pose.orientation);
+  const auto base_frame = costmap_ros_->getBaseFrameID();
+  const auto global_frame = global_plan_.header.frame_id;
 
-  // Select lookahead target
-  geometry_msgs::msg::Pose tracking_pose = goal_pose_.pose;
+  geometry_msgs::msg::PoseStamped robot_pose_in_global;
+  if (!transformPose(global_frame, pose, robot_pose_in_global, rclcpp::Duration::from_seconds(0.1))) {
+    throw nav2_core::PlannerException("Failed to transform robot pose to global plan frame");
+  }
+
+  // Find lookahead point on the path
+  geometry_msgs::msg::PoseStamped lookahead_pose_in_global;
+  lookahead_pose_in_global.pose = goal_pose_.pose;
+  lookahead_pose_in_global.header.frame_id = global_frame;
+  lookahead_pose_in_global.header.stamp = pose.header.stamp;
+
   for (const auto & ps : global_plan_.poses) {
-    if (euclideanDistance(ps.pose, pose.pose) > lookahead_dist_) {
-      tracking_pose = ps.pose;
+    if (euclideanDistance(ps.pose, robot_pose_in_global.pose) > lookahead_dist_) {
+      lookahead_pose_in_global.pose = ps.pose;
       break;
     }
   }
 
-  const auto & xd = tracking_pose.position.x;
-  const auto & yd = tracking_pose.position.y;
-  const double phid = std::atan2(yd - y, xd - x);  // Desired heading
+  // Transform lookahead point into base frame
+  geometry_msgs::msg::PoseStamped lookahead_pose;
+  if (!transformPose(base_frame, lookahead_pose_in_global, lookahead_pose, rclcpp::Duration::from_seconds(0.1))) {
+    throw nav2_core::PlannerException("Failed to transform lookahead pose to base frame");
+  }
 
-  // Feedforward components
-  const double dx = xd - x;
-  const double dy = yd - y;
-  const double dist = std::hypot(dx, dy);
+  // Control logic in base frame
+  const double xd = lookahead_pose.pose.position.x;
+  const double yd = lookahead_pose.pose.position.y;
+  const double phid = std::atan2(yd, xd);
+  const double phi = 0.0; // in base_link frame, heading is 0
+
+  const double dist = std::hypot(xd, yd);
   const double vd = std::min(kp_ * dist, max_linear_vel_);
 
-  // FIX 1: Correct heading error direction
   double phi_e = normalizeAngle(phid - phi);
+  double x_e = std::cos(phid) * (-xd) + std::sin(phid) * (-yd);
+  double y_e = -std::sin(phid) * (-xd) + std::cos(phid) * (-yd);
 
-  // Transform error into tracking frame
-  double x_e = std::cos(phid) * (x - xd) + std::sin(phid) * (y - yd);
-  double y_e = -std::sin(phid) * (x - xd) + std::cos(phid) * (y - yd);
-
-  // FIX 2: Clamp tan(phi_e) to avoid spikes
   double tan_phi_e = std::tan(phi_e);
   if (std::abs(tan_phi_e) > 3.0) {
     tan_phi_e = 3.0 * ((tan_phi_e > 0) ? 1 : -1);
   }
 
-  // FIX 3: Add floor to cos(phi_e)
-  double cos_phi_e = std::cos(phi_e);
-  cos_phi_e = std::max(cos_phi_e, 0.1);
-
-  // FIX 4: Smooth velocity reduction using heading error
+  double cos_phi_e = std::max(std::cos(phi_e), 0.1);
   double v = (vd - k1_ * std::abs(vd) * (x_e + y_e * tan_phi_e)) / cos_phi_e;
-
-  // Nonlinear angular correction
   double wd = kpo_ * phi_e;
   double w = wd - (k2_ * vd * y_e + k3_ * std::abs(vd) * tan_phi_e) * cos_phi_e * cos_phi_e;
 
-  // Clamp
   v = max(min(v, max_linear_vel_), 0.0);
   w = max(min(w, max_angular_vel_), -max_angular_vel_);
 
-  // Goal behavior
-  if (euclideanDistance(pose.pose, goal_pose_.pose) < 0.05) {
+  if (euclideanDistance(robot_pose_in_global.pose, goal_pose_.pose) < 0.05) {
     v = 0.0;
     reached_position_ = true;
   }
 
   if (reached_position_) {
-    double phi_error = normalizeAngle(tf2::getYaw(goal_pose_.pose.orientation) - phi);
-
-    // FIX 5: Smooth final orientation
+    double goal_yaw = tf2::getYaw(goal_pose_.pose.orientation);
+    double phi_error = normalizeAngle(goal_yaw - tf2::getYaw(robot_pose_in_global.pose.orientation));
     w = kpof_ * phi_error * std::exp(-std::abs(phi_error));
     w = max(min(w, max_angular_vel_), -max_angular_vel_);
 
@@ -143,7 +164,7 @@ geometry_msgs::msg::TwistStamped NonlinearFeedforwardController::computeVelocity
 
   geometry_msgs::msg::TwistStamped cmd_vel;
   cmd_vel.header.stamp = clock_->now();
-  cmd_vel.header.frame_id = pose.header.frame_id;
+  cmd_vel.header.frame_id = base_frame;
   cmd_vel.twist.linear.x = v;
   cmd_vel.twist.angular.z = w;
   return cmd_vel;
