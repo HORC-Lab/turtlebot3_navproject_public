@@ -1,18 +1,17 @@
 # HORC LAB Swarm Robotics Turtlebot3
 
+This repository is intended for use on the Turtlebot3 burger only. No remote PC use.
 ---
 This project contains the following list of `ROS2` packages:
 
-- **`DynamixelSDK`** (S): Motor controller submodule.
 - **`burger_test`** (F): Python package testing basic motion.
+- **`ldo8_driver`** (S): LiDAR submodule.
 - **`maps`** (A): Custom maps used by the robot.
 - **`nav2_nonlinear_feedforward_controller`**(A): C++ controller plugin for Nav2.
 - **`nav2_pure_pursuit_controller`** (A): C++ controller plugin for Nav2.
 - **`pose_plotter`** (A): Python package for plotting position and velocity data.
 - **`turtlebot3`** (S): General Turtlebot3 packages.
 - **`turtlebot3_control`** (N): Python package for testing controllers in simulation.
-- **`turtlebot3_msgs`** (S): General Turtlebot3 packages.
-- **`turtlebot3_simulations`** (S): Turtlebot3 packages for gazebo simulations. Intended for remote PC.
 
 Package status legend:
 ```python
@@ -22,9 +21,9 @@ Package status legend:
 - (S): Submodule. Created by Turtlebot3 team. 
 ```
 
-## Robot Submodule (`DynamixelSDK`)
+## Robot Submodule (`ld08_driver`)
 
-This package implements the interface for motor control. Refer to package README for details.
+This package implements the interface for the LiDAR. Refer to package README for details.
 
 ## Motion Test Package (`burger_test`)
 
@@ -54,10 +53,3 @@ This package implements basic Turtlebot3 packages. Refer to package README for d
 
 This is a Python ROS2 package that allows for controller development with /odom localization and direct trajectory path planning. Use to test control logic in Gazebo simulation. feedforward_proportional.py script can be modified to test different control logic.
 
-## Robot Submodule (`turtlebot3_msgs`)
-
-This package implements basic Turtlebot3 packages. Refer to package README for details.
-
-## Robot Submodule (`turtlebot3_simulations`)
-
-This package implements Turtlebot3 packages for Gazebo simulations. Refer to package README for details.

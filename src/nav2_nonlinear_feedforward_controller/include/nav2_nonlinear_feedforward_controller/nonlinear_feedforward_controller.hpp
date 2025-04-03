@@ -47,6 +47,11 @@ public:
 
   void setPlan(const nav_msgs::msg::Path & path) override;
   void setSpeedLimit(const double & speed_limit, const bool & percentage) override;
+  bool transformPose(
+  	const std::string & target_frame,
+  	const geometry_msgs::msg::PoseStamped & in_pose,
+  	geometry_msgs::msg::PoseStamped & out_pose,
+  	const rclcpp::Duration & transform_tolerance);
 
 protected:
   double normalizeAngle(double angle);
