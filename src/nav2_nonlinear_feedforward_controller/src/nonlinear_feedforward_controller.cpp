@@ -145,18 +145,18 @@ geometry_msgs::msg::TwistStamped NonlinearFeedforwardController::computeVelocity
   v = max(min(v, max_linear_vel_), 0.0);
   w = max(min(w, max_angular_vel_), -max_angular_vel_);
 
-  if (euclideanDistance(robot_pose_in_global.pose, goal_pose_.pose) < 0.05) {
-    v = 0.0;
+  if (euclideanDistance(robot_pose_in_global.pose, goal_pose_.pose) < 0.10) {
     reached_position_ = true;
   }
 
   if (reached_position_) {
+    v = 0.0;
     double goal_yaw = tf2::getYaw(goal_pose_.pose.orientation);
     double phi_error = normalizeAngle(goal_yaw - tf2::getYaw(robot_pose_in_global.pose.orientation));
     w = kpof_ * phi_error * std::exp(-std::abs(phi_error));
     w = max(min(w, max_angular_vel_), -max_angular_vel_);
 
-    if (std::abs(phi_error) < 0.001) {
+    if (std::abs(phi_error) < 0.05) {
       w = 0.0;
       RCLCPP_INFO(logger_, "Final orientation reached. Stopping rotation.");
     }
