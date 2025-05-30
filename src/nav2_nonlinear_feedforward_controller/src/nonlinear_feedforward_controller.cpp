@@ -100,7 +100,34 @@ geometry_msgs::msg::TwistStamped NonlinearFeedforwardController::computeVelocity
     throw nav2_core::PlannerException("Failed to transform robot pose to global plan frame");
   }
 
-  // Find lookahead point on the path
+  // Check if final position has been reached
+  if (!reached_position_ &&
+      euclideanDistance(robot_pose_in_global.pose, goal_pose_.pose) < 0.10) {
+    reached_position_ = true;
+  }
+
+  // Handle final orientation alignment mode
+  if (reached_position_) {
+    double goal_yaw = tf2::getYaw(goal_pose_.pose.orientation);
+    double current_yaw = tf2::getYaw(robot_pose_in_global.pose.orientation);
+    double phi_error = normalizeAngle(goal_yaw - current_yaw);
+    double w = kpof_ * phi_error * std::exp(-std::abs(phi_error));
+    w = max(min(w, max_angular_vel_), -max_angular_vel_);
+
+    if (std::abs(phi_error) < 0.05) {
+      w = 0.0;
+      RCLCPP_INFO(logger_, "Final orientation reached. Stopping rotation.");
+    }
+
+    geometry_msgs::msg::TwistStamped cmd_vel;
+    cmd_vel.header.stamp = clock_->now();
+    cmd_vel.header.frame_id = base_frame;
+    cmd_vel.twist.linear.x = 0.0;
+    cmd_vel.twist.angular.z = w;
+    return cmd_vel;
+  }
+
+  // Normal control mode
   geometry_msgs::msg::PoseStamped lookahead_pose_in_global;
   lookahead_pose_in_global.pose = goal_pose_.pose;
   lookahead_pose_in_global.header.frame_id = global_frame;
@@ -113,17 +140,15 @@ geometry_msgs::msg::TwistStamped NonlinearFeedforwardController::computeVelocity
     }
   }
 
-  // Transform lookahead point into base frame
   geometry_msgs::msg::PoseStamped lookahead_pose;
   if (!transformPose(base_frame, lookahead_pose_in_global, lookahead_pose, rclcpp::Duration::from_seconds(0.1))) {
     throw nav2_core::PlannerException("Failed to transform lookahead pose to base frame");
   }
 
-  // Control logic in base frame
   const double xd = lookahead_pose.pose.position.x;
   const double yd = lookahead_pose.pose.position.y;
   const double phid = std::atan2(yd, xd);
-  const double phi = 0.0; // in base_link frame, heading is 0
+  const double phi = 0.0;
 
   const double dist = std::hypot(xd, yd);
   const double vd = std::min(kp_ * dist, max_linear_vel_);
@@ -144,23 +169,6 @@ geometry_msgs::msg::TwistStamped NonlinearFeedforwardController::computeVelocity
 
   v = max(min(v, max_linear_vel_), 0.0);
   w = max(min(w, max_angular_vel_), -max_angular_vel_);
-
-  if (euclideanDistance(robot_pose_in_global.pose, goal_pose_.pose) < 0.10) {
-    reached_position_ = true;
-  }
-
-  if (reached_position_) {
-    v = 0.0;
-    double goal_yaw = tf2::getYaw(goal_pose_.pose.orientation);
-    double phi_error = normalizeAngle(goal_yaw - tf2::getYaw(robot_pose_in_global.pose.orientation));
-    w = kpof_ * phi_error * std::exp(-std::abs(phi_error));
-    w = max(min(w, max_angular_vel_), -max_angular_vel_);
-
-    if (std::abs(phi_error) < 0.05) {
-      w = 0.0;
-      RCLCPP_INFO(logger_, "Final orientation reached. Stopping rotation.");
-    }
-  }
 
   geometry_msgs::msg::TwistStamped cmd_vel;
   cmd_vel.header.stamp = clock_->now();
