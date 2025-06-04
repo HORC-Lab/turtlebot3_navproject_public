@@ -7,7 +7,7 @@ import math
 
 class PosePlotter(Node):
     def __init__(self):
-        super().__init__('pose_plotter')
+        super().__init__('performance_plotter')
         
         # Subscribe to Odometry for robot position
         self.odom_subscription = self.create_subscription(

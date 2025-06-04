@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'pose_plotter'
+package_name = 'performance_plotter'
 
 setup(
     name=package_name,
@@ -19,7 +19,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'pose_plotter = pose_plotter.pose_plotter:main',
+            'performance_plotter = performance_plotter.performance_plotter:main',
         ],
     },
 )

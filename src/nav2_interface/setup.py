@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'burger_test'
+package_name = 'nav2_interface'
 
 setup(
     name=package_name,
@@ -14,13 +14,13 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='apollo',
-    maintainer_email='stevbach@udel.edu',
+    maintainer_email='johncahill4493@gmail.com',
     description='TODO: Package description',
-    license='Apache-2.0',
+    license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'burger_test = burger_test.script.burger_test:main'
+            'nav2_interface = nav2_interface.nav2_interface:main'
         ],
     },
 )

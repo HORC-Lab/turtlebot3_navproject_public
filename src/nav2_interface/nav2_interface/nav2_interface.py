@@ -51,7 +51,7 @@ def aligned_range(start, end, step=0.5):
 
 class Nav2PoseTool(Node):
     def __init__(self, map_yaml_path):
-        super().__init__('nav2_pose_tool')
+        super().__init__('nav2_interface')
 
         self.map_yaml_path = map_yaml_path
         self.map_data = None
