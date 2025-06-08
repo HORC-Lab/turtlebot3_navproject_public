@@ -1,0 +1,11 @@
+<class_libraries>
+  <library path="nav2_custom_controller">
+    <class type="nav2_custom_controller::CustomController"
+           base_class_type="nav2_core::Controller">
+      <description>
+        Nav2 Custom Controller Plugin Template
+      </description>
+    </class>
+  </library>
+</class_libraries>
+
