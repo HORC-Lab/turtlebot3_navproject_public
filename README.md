@@ -1,12 +1,15 @@
-# HORC LAB Swarm Robotics Turtlebot3
+# HORC LAB Robotics Turtlebot3
+This branch (pc-dev-final) contains the packages required for general Turtlebot3 operation and Nav2 controller plugin development for the remote PC. Most packages in this branch are finished and intended for local development and general Turtlebot3 use.
 
 ---
 This project contains the following list of `ROS2` packages:
 
 - **`DynamixelSDK`** (S): Motor controller submodule.
+- **`nav2_custom_controller`** (A): C++ controller plugin template for Nav2.
+- **`nav2_interface`** (A): Python package providing an interface for operation of Nav2.
 - **`maps`** (F): Custom maps used by the robot.
 - **`nav2_nonlinear_feedforward_controller`**(A): C++ controller plugin for Nav2.
-- **`nav2_pure_pursuit_controller`** (A): C++ controller plugin for Nav2.
+- **`nav2_pure_pursuit_controller`** (F): C++ controller plugin for Nav2.
 - **`performance_plotter`** (F): Python package for plotting position and velocity data.
 - **`turtlebot3`** (S): General Turtlebot3 packages.
 - **`turtlebot3_msgs`** (S): General Turtlebot3 packages.
@@ -22,6 +25,14 @@ Package status legend:
 ## Robot Submodule (`DynamixelSDK`)
 
 This package implements the interface for motor control. Refer to package README for details.
+
+## C++ Nav2 plugin template (`nav2_custom_controller`)
+
+This is a C++ Nav2 plugin package template to be ran as part of the Nav2 stack. Develop custom controller logic in this package for use in Nav2.
+
+## Python Nav2 operation package (`nav2_interface`)
+
+This is a Python ROS2 package that provides an interface for Nav2 operation. Intended to replace Rviz when using Nav2.
 
 ## SLAM Maps (`maps`)
 
