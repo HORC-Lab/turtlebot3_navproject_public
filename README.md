@@ -1,6 +1,6 @@
-# HORC LAB Swarm Robotics Turtlebot3
+# HORC LAB Robotics Turtlebot3
+This branch (burger-deploy-final) is intended for use on the Turtlebot3 burger only, no remote PC use. It contains the basic packages required for Turtlebot3 operation and is intended for general Turtlebot3 use.
 
-This repository is intended for use on the Turtlebot3 burger only. No remote PC use.
 ---
 This project contains the following list of `ROS2` packages:
 
