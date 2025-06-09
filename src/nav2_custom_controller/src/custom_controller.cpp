@@ -16,6 +16,7 @@ void CustomController::configure(
   const std::shared_ptr<tf2_ros::Buffer> tf,
   const std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros)
 {
+  // ==== Boilerplate setup ====
   node_ = parent.lock();
   plugin_name_ = name;
   tf_ = tf;
@@ -23,7 +24,9 @@ void CustomController::configure(
   clock_ = node_->get_clock();
   logger_ = node_->get_logger();
 
-  // Declare and get parameters
+  // ==== STUDENT SECTION: Declare and retrieve control parameters ====
+  // You may declare additional parameters here for your custom controller
+
   node_->declare_parameter(name + ".kp", 0.4);
   node_->declare_parameter(name + ".kpo", 1.8);
   node_->declare_parameter(name + ".k1", 0.2);
@@ -45,6 +48,7 @@ void CustomController::configure(
   node_->get_parameter(name + ".lookahead_dist", lookahead_dist_);
 }
 
+// Lifecycle hooks
 void CustomController::cleanup() {}
 void CustomController::activate() {}
 void CustomController::deactivate() {}
@@ -56,17 +60,20 @@ void CustomController::setPlan(const nav_msgs::msg::Path & path)
   reached_position_ = false;
 }
 
+// === Utility function to normalize angle to [-π, π] ===
 double CustomController::normalizeAngle(double angle)
 {
   return std::atan2(std::sin(angle), std::cos(angle));
 }
 
+// === Euclidean distance between two poses ===
 double CustomController::euclideanDistance(
   const geometry_msgs::msg::Pose & a, const geometry_msgs::msg::Pose & b)
 {
   return std::hypot(a.position.x - b.position.x, a.position.y - b.position.y);
 }
 
+// === Frame transformation helper ===
 bool CustomController::transformPose(
   const std::string & target_frame,
   const geometry_msgs::msg::PoseStamped & in_pose,
@@ -87,6 +94,8 @@ bool CustomController::transformPose(
   }
 }
 
+// === STUDENT SECTION: Implement your control logic here ===
+// This function must return a velocity command given the current robot pose
 geometry_msgs::msg::TwistStamped CustomController::computeVelocityCommands(
   const geometry_msgs::msg::PoseStamped & pose,
   const geometry_msgs::msg::Twist & /*velocity*/,
@@ -100,13 +109,13 @@ geometry_msgs::msg::TwistStamped CustomController::computeVelocityCommands(
     throw nav2_core::PlannerException("Failed to transform robot pose to global plan frame");
   }
 
-  // Check if final position has been reached
+  // === Final position check ===
   if (!reached_position_ &&
       euclideanDistance(robot_pose_in_global.pose, goal_pose_.pose) < 0.10) {
     reached_position_ = true;
   }
 
-  // Handle final orientation alignment mode
+  // === Final orientation alignment ===
   if (reached_position_) {
     double goal_yaw = tf2::getYaw(goal_pose_.pose.orientation);
     double current_yaw = tf2::getYaw(robot_pose_in_global.pose.orientation);
@@ -127,7 +136,10 @@ geometry_msgs::msg::TwistStamped CustomController::computeVelocityCommands(
     return cmd_vel;
   }
 
-  // Normal control mode
+  // === STUDENT LOGIC START: Path following control ===
+  // Use your chosen control law to compute velocity commands
+  // The block below is an example based on nonlinear feedforward logic
+
   geometry_msgs::msg::PoseStamped lookahead_pose_in_global;
   lookahead_pose_in_global.pose = goal_pose_.pose;
   lookahead_pose_in_global.header.frame_id = global_frame;
@@ -148,12 +160,11 @@ geometry_msgs::msg::TwistStamped CustomController::computeVelocityCommands(
   const double xd = lookahead_pose.pose.position.x;
   const double yd = lookahead_pose.pose.position.y;
   const double phid = std::atan2(yd, xd);
-  const double phi = 0.0;
 
   const double dist = std::hypot(xd, yd);
   const double vd = std::min(kp_ * dist, max_linear_vel_);
 
-  double phi_e = normalizeAngle(phid - phi);
+  double phi_e = normalizeAngle(phid);
   double x_e = std::cos(phid) * (-xd) + std::sin(phid) * (-yd);
   double y_e = -std::sin(phid) * (-xd) + std::cos(phid) * (-yd);
 
@@ -169,6 +180,7 @@ geometry_msgs::msg::TwistStamped CustomController::computeVelocityCommands(
 
   v = max(min(v, max_linear_vel_), 0.0);
   w = max(min(w, max_angular_vel_), -max_angular_vel_);
+  // === STUDENT LOGIC END ===
 
   geometry_msgs::msg::TwistStamped cmd_vel;
   cmd_vel.header.stamp = clock_->now();
@@ -178,13 +190,11 @@ geometry_msgs::msg::TwistStamped CustomController::computeVelocityCommands(
   return cmd_vel;
 }
 
-void CustomController::setSpeedLimit(
-  const double & /*speed_limit*/, const bool & /*percentage*/)
-{
-  // No-op
-}
+// Optional override (not used in this template)
+void CustomController::setSpeedLimit(const double & /*speed_limit*/, const bool & /*percentage*/) {}
 
 }  // namespace nav2_custom_controller
 
+// === Register plugin with pluginlib ===
 PLUGINLIB_EXPORT_CLASS(nav2_custom_controller::CustomController, nav2_core::Controller)
 

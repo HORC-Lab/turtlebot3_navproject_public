@@ -3,12 +3,14 @@
 <package format="3">
   <name>nav2_custom_controller</name>
   <version>1.0.0</version>
-  <description>Custom Controller Plugin Template for Nav2</description>
+  <description>Custom Controller Plugin Template for Nav2. Students should implement their control logic.</description>
   <maintainer email="your.email@example.com">Your Name</maintainer>
   <license>BSD-3-Clause</license>
 
+  <!-- Build system -->
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <!-- Required dependencies -->
   <depend>nav2_common</depend>
   <depend>nav2_core</depend>
   <depend>nav2_util</depend>
@@ -21,10 +23,13 @@
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
 
+  <!-- Runtime dependency for testing in nav2_bringup -->
   <exec_depend>nav2_bringup</exec_depend>
 
+  <!-- Optional: Testing -->
   <test_depend>ament_cmake_gtest</test_depend>
 
+  <!-- Export plugin for dynamic loading -->
   <export>
     <build_type>ament_cmake</build_type>
     <nav2_core plugin="${prefix}/plugin.xml"/>

@@ -12,7 +12,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 def print_description():
     print("""
-[Nav2 Pose Tool]
+[Nav2 Interface]
 This program acts as a lightweight substitute for RViz when using the Nav2 stack in ROS 2 Humble.
 
 - A valid YAML map file is required to run this node.

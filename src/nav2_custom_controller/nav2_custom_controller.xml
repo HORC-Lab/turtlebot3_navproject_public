@@ -1,11 +1,11 @@
+<?xml version="1.0"?>
 <class_libraries>
   <library path="nav2_custom_controller">
     <class type="nav2_custom_controller::CustomController"
            base_class_type="nav2_core::Controller">
       <description>
-        Nav2 Custom Controller Plugin Template
+        Custom Controller Plugin Template for Nav2. Students should implement their own control logic.
       </description>
     </class>
   </library>
 </class_libraries>
-
