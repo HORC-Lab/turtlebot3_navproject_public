@@ -98,30 +98,27 @@ bt_navigator_rclcpp_node:
 
 # Custom Controller Plugin for Nav2
 # This section defines the controller plugin and exposes tunable parameters
-# Students should adjust the gains and limits below to experiment with control behavior
+# Students should define and adjust parameters required for their control law
 
 controller_server:
   ros__parameters:
-    use_sim_time: false
     controller_plugins: ["FollowPath"]
+    use_sim_time: false
 
     FollowPath:
       plugin: "nav2_custom_controller::CustomController"
 
-      # === Student-Tuned Parameters ===
-      kp: 0.4                  # Proportional gain for distance error
-      kpo: 1.8                 # Proportional gain for orientation error
-      k1: 0.2                  # Student-defined gain (x error influence)
-      k2: 3.0                  # Student-defined gain (y error influence)
-      k3: 5.0                  # Student-defined gain (angular offset)
-      kpof: 2.8                # Final orientation correction gain
+      # === [STUDENT SECTION] Controller parameters ===
+      # Add your controller-specific parameters below.
+      # These should match the ones declared in your plugin's configure() method.
 
-      # === Velocity Limits ===
-      max_linear_vel: 0.22     # Max linear velocity in m/s
-      max_angular_vel: 2.84    # Max angular velocity in rad/s
+      kp: 1.0  # Example: proportional gain for linear distance to goal
 
-      # === Lookahead Distance ===
-      lookahead_dist: 0.3      # Distance ahead along path to target for control
+      # Students may add additional parameters as needed
+      # For example:
+      # lookahead_dist: 0.3
+      # max_linear_vel: 0.22
+      # max_angular_vel: 2.84
 
 # End of Custom Controller Section
       
