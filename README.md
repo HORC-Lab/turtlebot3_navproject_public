@@ -6,9 +6,9 @@ This project contains the following list of `ROS2` packages:
 
 - **`DynamixelSDK`** (S): Motor controller submodule.
 - **`nav2_custom_controller`** (A): C++ controller plugin template for Nav2.
-- **`nav2_interface`** (A): Python package providing an interface for operation of Nav2.
+- **`nav2_interface`** (F): Python package providing an interface for operation of Nav2.
 - **`maps`** (F): Custom maps used by the robot.
-- **`nav2_nonlinear_feedforward_controller`**(A): C++ controller plugin for Nav2.
+- **`nav2_nonlinear_feedforward_controller`**(F): C++ controller plugin for Nav2.
 - **`nav2_pure_pursuit_controller`** (F): C++ controller plugin for Nav2.
 - **`performance_plotter`** (F): Python package for plotting position and velocity data.
 - **`turtlebot3`** (S): General Turtlebot3 packages.
